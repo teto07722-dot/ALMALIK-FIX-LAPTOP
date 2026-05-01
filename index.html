@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
@@ -7,7 +8,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="ALMALIK">
 <meta name="theme-color" content="#06090f">
-<title>ALMALIK — مركز الصيانة الرئيسي</title>
+<title>ALMALIK — نظام إدارة الورشة</title>
 <link rel="manifest" href="#" id="mfLink">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -18,6 +19,7 @@
 <body>
 
 <!-- ══ LOGIN ══ -->
+
 <div id="LS">
   <div class="lw">
     <div class="lbrand">
@@ -36,9 +38,11 @@
 </div>
 
 <!-- ══ OVERLAY ══ -->
+
 <div class="ov" id="ov" onclick="closeSB()"></div>
 
 <!-- ══ HEADER ══ -->
+
 <header id="MH" style="display:none">
   <button class="hb" id="mbtn" onclick="toggleSB()" style="display:none">☰</button>
   <div class="hbrand"><span class="g">AL</span><span class="s">MALIK</span></div>
@@ -56,6 +60,7 @@
 </header>
 
 <!-- ══ APP ══ -->
+
 <div class="aw" id="AW" style="display:none">
   <div class="main" id="MA"><div id="PC"></div></div>
   <div class="sb" id="SB">
@@ -79,6 +84,7 @@
 </div>
 
 <!-- ══ MOBILE NAV ══ -->
+
 <div class="mn" id="MN" style="display:none">
   <button onclick="showTab('devices')"    id="mn-devices">    <span class="mni">💻</span>مخزن</button>
   <button onclick="showTab('repairs')"    id="mn-repairs">    <span class="mni">🔧</span>صيانة</button>
@@ -93,6 +99,7 @@
 <!-- ══════════ MODALS ══════════ -->
 
 <!-- DEVICE -->
+
 <div class="mo" id="devModal" style="display:none"><div class="md">
   <div class="mh-bar"></div>
   <div class="mh"><h2 id="devMT">إضافة جهاز</h2><button class="mx" onclick="cm('devModal')">×</button></div>
@@ -109,6 +116,7 @@
 </div></div>
 
 <!-- MODEL -->
+
 <div class="mo" id="modModal" style="display:none"><div class="md" style="max-width:420px">
   <div class="mh-bar"></div>
   <div class="mh"><h2>موديل جديد</h2><button class="mx" onclick="cm('modModal')">×</button></div>
@@ -140,6 +148,7 @@
 </div></div>
 
 <!-- TRANSFER -->
+
 <div class="mo" id="transModal" style="display:none"><div class="md">
   <div class="mh-bar"></div>
   <div class="mh"><h2>🔧 استخدام قطعة من الجهاز</h2><button class="mx" onclick="cm('transModal')">×</button></div>
@@ -152,6 +161,7 @@
 </div></div>
 
 <!-- SELL FROM DEVICE -->
+
 <div class="mo" id="sellDevModal" style="display:none"><div class="md" style="max-width:420px">
   <div class="mh-bar"></div>
   <div class="mh"><h2>💰 بيع قطعة من جهاز</h2><button class="mx" onclick="cm('sellDevModal')">×</button></div>
@@ -165,6 +175,7 @@
 </div></div>
 
 <!-- PART -->
+
 <div class="mo" id="partModal" style="display:none"><div class="md" style="max-width:460px">
   <div class="mh-bar"></div>
   <div class="mh"><h2 id="partMT">إضافة قطعة غيار</h2><button class="mx" onclick="cm('partModal')">×</button></div>
@@ -195,6 +206,7 @@
 </div></div>
 
 <!-- WITHDRAW -->
+
 <div class="mo" id="wdModal" style="display:none"><div class="md" style="max-width:400px">
   <div class="mh-bar"></div>
   <div class="mh"><h2>📤 سحب / بيع قطعة</h2><button class="mx" onclick="cm('wdModal')">×</button></div>
@@ -214,6 +226,7 @@
 </div></div>
 
 <!-- NEW REPAIR -->
+
 <div class="mo" id="repairModal" style="display:none"><div class="md">
   <div class="mh-bar"></div>
   <div class="mh"><h2 id="repMT">صيانة جديدة</h2><button class="mx" onclick="cm('repairModal')">×</button></div>
@@ -253,6 +266,7 @@
 </div></div>
 
 <!-- REPAIR PROGRESS -->
+
 <div class="mo" id="repProgModal" style="display:none"><div class="md">
   <div class="mh-bar"></div>
   <div class="mh"><h2>📝 تحديث الصيانة</h2><button class="mx" onclick="cm('repProgModal')">×</button></div>
@@ -301,6 +315,7 @@
 </div></div>
 
 <!-- QR -->
+
 <div class="mo" id="qrModal" style="display:none"><div class="md" style="max-width:400px">
   <div class="mh-bar"></div>
   <div class="mh"><h2>📲 رابط تتبع الزبون</h2><button class="mx" onclick="cm('qrModal')">×</button></div>
@@ -318,6 +333,7 @@
 </div></div>
 
 <!-- USER -->
+
 <div class="mo" id="userModal" style="display:none"><div class="md" style="max-width:440px">
   <div class="mh-bar"></div>
   <div class="mh"><h2 id="userMT">مستخدم جديد</h2><button class="mx" onclick="cm('userModal')">×</button></div>
@@ -348,6 +364,7 @@
 </div></div>
 
 <!-- EXPORT -->
+
 <div class="mo" id="expModal" style="display:none"><div class="md" style="max-width:360px">
   <div class="mh-bar"></div>
   <div class="mh"><h2>📤 تصدير البيانات</h2><button class="mx" onclick="cm('expModal')">×</button></div>
@@ -363,6 +380,7 @@
 </div></div>
 
 <!-- SETTINGS / FIREBASE -->
+
 <div class="mo" id="setModal" style="display:none"><div class="md" style="max-width:460px">
   <div class="mh-bar"></div>
   <div class="mh"><h2>⚙️ إعداد Firebase</h2><button class="mx" onclick="cm('setModal')">×</button></div>
@@ -388,14 +406,19 @@
 </div></div>
 
 <!-- ══ JS FILES ══ -->
+
 <script src="js/data.js"></script>
+
 <script src="js/firebase.js"></script>
 
 <script src="js/app.js"></script>
+
 <script src="js/pages.js"></script>
+
 <script src="js/actions.js"></script>
 
 <!-- ══ Firebase Module (must be type=module) ══ -->
+
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getDatabase, ref, set, onValue, off, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
@@ -408,37 +431,56 @@ if (typeof isFBOK === 'function' && typeof getFBConfig === 'function' && isFBOK(
 </script>
 
 <!-- ══ INIT ══ -->
+
 <script>
+// ── Global error handler — shows errors visibly ──
+window.onerror = function(msg, src, line, col, err) {
+  console.error('ALMALIK Error:', msg, 'at', src, line+':'+col);
+  const lerr = document.getElementById('lerr');
+  if (lerr) { lerr.style.display='block'; lerr.textContent = 'خطأ: '+msg+' ('+src.split('/').pop()+':'+line+')'; }
+  return false;
+};
+
+// ── Keyboard shortcuts ──
 document.getElementById('lu').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('lp').focus(); });
 document.getElementById('lp').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
-// Close modals on overlay click
+// ── Close modals on overlay click ──
 document.querySelectorAll('.mo').forEach(o => o.addEventListener('click', e => { if(e.target===o) o.style.display='none'; }));
 
-// PWA manifest
+// ── PWA manifest ──
 try {
   const mf = { name:"ALMALIK",short_name:"ALMALIK",display:"standalone",background_color:"#06090f",theme_color:"#06090f",dir:"rtl",lang:"ar",start_url:"./",
     icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2306090f'/><text y='.9em' font-size='70' x='15'>💻</text></svg>",sizes:"512x512",type:"image/svg+xml"}] };
   document.getElementById('mfLink').href = URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'}));
 } catch(e) {}
 
-// App start
-lsLoad();
-loadDemo();
-checkMob();
+// ── App start ──
+try {
+  lsLoad();
+  loadDemo();
+  checkMob();
+} catch(e) { console.error('Init error:', e); }
 
-// Restore session
-const saved = lsLoadCU();
-if (saved) {
-  const fr = Object.values(DB.users||{}).find(u => u.username===saved.username && u.password===saved.password);
-  if (fr) { CU = fr; showApp(); }
-}
+// ── Restore session ──
+try {
+  const saved = lsLoadCU();
+  if (saved) {
+    const fr = Object.values(DB.users||{}).find(u => u.username===saved.username && u.password===saved.password);
+    if (fr) { CU = fr; showApp(); }
+  }
+} catch(e) { console.error('Session restore error:', e); }
 
-// Try Firebase after delay (allow module to load)
-setTimeout(() => { if (typeof isFBOK==='function' && isFBOK(getFBConfig()) && !window._fbOK) initFB(); }, 600);
+// ── Firebase: try after short delay to allow module script to run ──
+setTimeout(() => {
+  try {
+    if (typeof isFBOK==='function' && isFBOK(getFBConfig()) && !window._fbOK) initFB();
+  } catch(e) { console.error('Firebase init error:', e); }
+}, 800);
 
-// Periodic header refresh
+// ── Periodic header refresh ──
 setInterval(() => { if (CU) { try { rHeader(); } catch(e) {} } }, 30000);
 </script>
+
 </body>
 </html>
