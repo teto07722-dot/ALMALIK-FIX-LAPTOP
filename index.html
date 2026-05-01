@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="LaptoParts">
+<meta name="theme-color" content="#0d0f14">
+<title>LaptoParts</title>
+<link rel="manifest" href="#" id="manifestLink">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, set, onValue, off }
+  from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+window._fbMods = { initializeApp, getApps, getDatabase, ref, set, onValue, off };
+window._fbModsReady = true;
+window.dispatchEvent(new Event('fbModsReady'));
+</script>
+<style>
+:root{
+  --bg:#0d0f14;--surface:#161a22;--surface2:#1e2330;--surface3:#242b38;
+  --border:#2a3040;--border2:#353d50;
+  --accent:#3b82f6;--accent2:#22d3ee;--accent3:#818cf8;
+  --green:#10b981;--red:#ef4444;--yellow:#f59e0b;--orange:#f97316;
+  --text:#e2e8f0;--text2:#94a3b8;--muted:#64748b;
+  --radius:10px;--radius2:14px;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+body{font-family:'IBM Plex Sans Arabic',sans-serif;background:var(--bg);color:var(--text);font-size:14px;overscroll-behavior:none}
+
+header{
+  background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 14px;padding-top:calc(10px + var(--safe-top));
+  display:flex;align-items:center;gap:9px;
+  position:fixed;top:0;left:0;right:0;z-index:200;
+}
+.logo{font-size:19px;font-weight:700;color:var(--accent2);letter-spacing:-1px;white-space:nowrap}
+.logo span{color:var(--accent3)}
+.sync-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:20px;padding:3px 9px;font-size:10px;color:var(--muted);
+  white-space:nowrap;
+}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background .3s}
+.sync-dot.online{background:var(--green);box-shadow:0 0 5px var(--green)}
+.sync-dot.syncing{background:var(--yellow);animation:pulse .8s infinite}
+.sync-dot.offline{background:var(--orange)}
+.sync-dot.error{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.hstats{display:flex;gap:12px;margin-right:auto}
+.hstat .v{font-size:15px;font-weight:700;line-height:1;text-align:center}
+.hstat .l{font-size:9px;color:var(--muted);text-align:center}
+.hbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:15px;transition:all .15s;flex-shrink:0}
+.hbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+.app-wrap{display:flex;height:100vh;padding-top:calc(56px + var(--safe-top))}
+.main{flex:1;overflow-y:auto;padding:14px;padding-bottom:calc(70px + var(--safe-bot))}
+.sidebar{width:235px;background:var(--surface);border-left:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
+
+@media(max-width:680px){
+  .sidebar{display:none}
+  .sidebar.open{display:flex;position:fixed;top:0;left:0;bottom:0;z-index:300;width:270px;padding-top:calc(56px + var(--safe-top));box-shadow:6px 0 30px rgba(0,0,0,.6)}
+  .ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:299;backdrop-filter:blur(3px)}
+  .ov.open{display:block}
+}
+
+.sb-head{padding:11px 13px;border-bottom:1px solid var(--border)}
+.sb-head h3{font-size:10px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.model-list{overflow-y:auto;flex:1}
+.mitem{padding:10px 13px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .12s;display:flex;align-items:center;gap:7px}
+.mitem:hover{background:var(--surface2)}
+.mitem.active{background:rgba(59,130,246,.1);border-right:3px solid var(--accent)}
+.mitem .mn{font-weight:500;font-size:12px;flex:1;min-width:0}
+.mitem .msub{font-size:10px;color:var(--muted)}
+.mitem .mc{background:var(--surface2);border-radius:20px;padding:2px 7px;font-size:10px;color:var(--muted);flex-shrink:0}
+.mbar{height:3px;background:var(--border);border-radius:2px;margin-top:3px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:2px;transition:width .4s}
+.sb-add{margin:10px;padding:9px;background:rgba(59,130,246,.07);border:1px dashed var(--accent);border-radius:var(--radius);color:var(--accent);cursor:pointer;font-family:inherit;font-size:12px;transition:all .2s;text-align:center}
+.sb-add:hover{background:rgba(59,130,246,.18)}
+
+.toolbar{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.search-wrap{flex:1;min-width:140px;position:relative}
+.search-wrap .si{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:14px}
+.search-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px 32px 8px 11px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:border .2s}
+.search-input:focus{border-color:var(--accent)}
+.filter-btns{display:flex;gap:5px;flex-wrap:wrap}
+.fbtn{padding:7px 11px;border-radius:var(--radius);border:1px solid var(--border);background:var(--surface);color:var(--muted);cursor:pointer;font-family:inherit;font-size:12px;transition:all .15s;white-space:nowrap}
+.fbtn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.add-btn{padding:8px 13px;border-radius:var(--radius);border:none;background:var(--accent);color:#fff;cursor:pointer;font-family:inherit;font-size:13px;font-weight:600;white-space:nowrap;transition:background .15s}
+.add-btn:hover{background:#2563eb}
+
+.sec-head{display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.sec-title{font-size:14px;font-weight:700}
+.bdg{font-size:10px;font-weight:500;background:var(--surface2);padding:2px 7px;border-radius:20px;color:var(--muted)}
+.bdg.g{background:rgba(16,185,129,.15);color:var(--green)}
+.bdg.y{background:rgba(245,158,11,.15);color:var(--yellow)}
+.sec-prog{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-bottom:13px}
+.sec-prog-fill{height:100%;border-radius:3px;transition:width .5s ease}
+.pct{font-size:10px;color:var(--muted);margin-right:auto}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:11px;margin-bottom:22px}
+@media(max-width:480px){.grid{grid-template-columns:1fr}}
+
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden;transition:border-color .2s,transform .15s,box-shadow .2s}
+.card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 18px rgba(0,0,0,.3)}
+.card.done{border-color:rgba(16,185,129,.3);opacity:.78}
+.card.done .ch{background:rgba(16,185,129,.05)}
+.ch{padding:10px 12px;background:var(--surface2);display:flex;align-items:center;gap:6px;border-bottom:1px solid var(--border)}
+.cid{font-size:10px;color:var(--muted);background:var(--bg);padding:2px 6px;border-radius:5px;flex-shrink:0}
+.cname{font-weight:600;flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stbdg{font-size:10px;padding:2px 7px;border-radius:20px;font-weight:600;flex-shrink:0}
+.stbdg.done{background:rgba(16,185,129,.15);color:var(--green)}
+.stbdg.partial{background:rgba(245,158,11,.15);color:var(--yellow)}
+.stbdg.broken{background:rgba(239,68,68,.15);color:var(--red)}
+.cb{padding:10px 12px}
+.notes-r{color:var(--muted);font-size:11px;margin-bottom:8px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cprog-wrap{margin-bottom:9px}
+.cprog-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden}
+.cprog-fill{height:100%;border-radius:2px;transition:width .4s}
+.cprog-lbl{font-size:10px;color:var(--muted);margin-top:3px;display:flex;justify-content:space-between}
+.psec{margin-bottom:6px}
+.plbl{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--muted);margin-bottom:4px}
+.pgrid{display:flex;flex-wrap:wrap;gap:4px}
+.ptag{display:flex;align-items:center;gap:4px;padding:3px 7px;border-radius:6px;font-size:11px;font-weight:500;cursor:pointer;transition:all .12s;user-select:none;border:1px solid transparent}
+.ptag.good{background:rgba(16,185,129,.1);color:var(--green);border-color:rgba(16,185,129,.2)}
+.ptag.bad{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.2)}
+.ptag.used{background:rgba(245,158,11,.08);color:var(--yellow);border-color:rgba(245,158,11,.15);text-decoration:line-through;opacity:.65}
+.ptag:hover{filter:brightness(1.2)}
+.pdot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
+.ca{padding:8px 12px;border-top:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap}
+.btn{padding:6px 10px;border-radius:7px;border:none;font-family:inherit;font-size:11px;font-weight:500;cursor:pointer;transition:all .12s;white-space:nowrap}
+.bp{background:var(--accent);color:#fff}
+.bp:hover{background:#2563eb}
+.bg{background:var(--surface2);color:var(--text);border:1px solid var(--border)}
+.bg:hover{border-color:var(--accent);color:var(--accent)}
+.bd{background:rgba(239,68,68,.08);color:var(--red);border:1px solid rgba(239,68,68,.15)}
+.bd:hover{background:rgba(239,68,68,.18)}
+.bs{background:rgba(16,185,129,.1);color:var(--green);border:1px solid rgba(16,185,129,.2)}
+.bs:hover{background:rgba(16,185,129,.22)}
+.bw{background:rgba(245,158,11,.1);color:var(--yellow);border:1px solid rgba(245,158,11,.2)}
+
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.75);display:flex;align-items:flex-end;justify-content:center;z-index:500;backdrop-filter:blur(5px);animation:fi .18s}
+@media(min-width:600px){.modal-ov{align-items:center}}
+@keyframes fi{from{opacity:0}to{opacity:1}}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius2) var(--radius2) 0 0;width:100%;max-width:540px;max-height:92vh;overflow-y:auto;animation:su .22s;padding-bottom:var(--safe-bot)}
+@media(min-width:600px){.modal{border-radius:var(--radius2);max-height:88vh}}
+@keyframes su{from{transform:translateY(30px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mhandle{width:38px;height:4px;border-radius:2px;background:var(--border2);margin:10px auto 0}
+.mhead{padding:13px 17px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:7px}
+.mhead h2{font-size:14px;font-weight:700;flex:1}
+.mclose{background:none;border:none;color:var(--muted);cursor:pointer;font-size:22px;line-height:1;padding:0}
+.mbody{padding:14px 17px}
+.mfoot{padding:11px 17px;border-top:1px solid var(--border);display:flex;gap:6px;justify-content:flex-end}
+.fg{margin-bottom:13px}
+.fl{display:block;font-size:10px;font-weight:600;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.7px}
+.fi,.fsel,.fta{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;color:var(--text);font-family:inherit;font-size:13px;outline:none;transition:border .2s}
+.fi:focus,.fsel:focus,.fta:focus{border-color:var(--accent)}
+.fta{resize:vertical;min-height:62px}
+.fsel option{background:var(--surface2)}
+.pe{display:flex;flex-direction:column;gap:6px}
+.prow{display:flex;gap:6px;align-items:center;background:var(--surface2);padding:7px 9px;border-radius:8px;border:1px solid var(--border)}
+.prow input{flex:1;background:none;border:none;color:var(--text);font-family:inherit;font-size:12px;outline:none;min-width:0}
+.prow select{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:inherit;font-size:11px;border-radius:6px;padding:3px 6px;outline:none;flex-shrink:0}
+.rmbtn{background:none;border:none;color:var(--red);cursor:pointer;font-size:18px;opacity:.6;flex-shrink:0}
+.rmbtn:hover{opacity:1}
+.apbtn{background:var(--surface2);border:1px dashed var(--border2);border-radius:8px;padding:7px;color:var(--muted);cursor:pointer;font-family:inherit;font-size:12px;text-align:center;transition:all .2s;margin-top:6px}
+.apbtn:hover{border-color:var(--accent);color:var(--accent)}
+
+.ti{display:flex;align-items:center;gap:9px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-bottom:6px;cursor:pointer;transition:border-color .15s}
+.ti:hover{border-color:var(--accent)}
+.ti label{flex:1;font-size:12px;cursor:pointer}
+.ti input[type=checkbox]{accent-color:var(--accent);width:16px;height:16px;flex-shrink:0}
+
+.setup-banner{background:linear-gradient(135deg,rgba(59,130,246,.12),rgba(34,211,238,.06));border:1px solid rgba(59,130,246,.25);border-radius:var(--radius2);padding:16px;margin-bottom:18px}
+.setup-banner h3{font-size:13px;font-weight:700;margin-bottom:7px;color:var(--accent2)}
+.setup-banner p{font-size:12px;color:var(--text2);line-height:1.7;margin-bottom:10px}
+.setup-banner code{background:var(--surface2);padding:2px 5px;border-radius:4px;font-family:monospace;font-size:11px;color:var(--accent)}
+.ssteps{display:flex;flex-direction:column;gap:6px}
+.sstep{display:flex;gap:9px;align-items:flex-start}
+.snum{width:19px;height:19px;border-radius:50%;background:var(--accent);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.stxt{font-size:12px;color:var(--text2);line-height:1.6}
+
+.egrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ebtn{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:13px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text);font-family:inherit}
+.ebtn:hover{border-color:var(--accent);background:rgba(59,130,246,.07)}
+.ebtn .eico{font-size:22px;margin-bottom:5px}
+.ebtn .et{font-size:12px;font-weight:600}
+.ebtn .es{font-size:10px;color:var(--muted)}
+
+.mob-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--surface);border-top:1px solid var(--border);padding:8px 0;padding-bottom:var(--safe-bot);flex-direction:row;justify-content:space-around;z-index:150}
+@media(max-width:680px){.mob-nav{display:flex}}
+.mob-nav button{flex:1;background:none;border:none;color:var(--muted);cursor:pointer;font-family:inherit;font-size:10px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px;transition:color .15s}
+.mob-nav button.active,.mob-nav button:hover{color:var(--accent)}
+.mob-nav .mico{font-size:19px}
+
+#toastWrap{position:fixed;bottom:calc(14px + var(--safe-bot) + 60px);right:12px;z-index:999;display:flex;flex-direction:column;gap:6px}
+@media(min-width:681px){#toastWrap{bottom:calc(14px + var(--safe-bot))}}
+.toast{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:9px 13px;font-size:12px;display:flex;align-items:center;gap:7px;animation:ti .22s;max-width:270px;box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.toast.success{border-color:rgba(16,185,129,.4);background:rgba(16,185,129,.1);color:var(--green)}
+.toast.error{border-color:rgba(239,68,68,.4);background:rgba(239,68,68,.1);color:var(--red)}
+.toast.info{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.1);color:var(--accent)}
+@keyframes ti{from{transform:translateX(18px);opacity:0}to{transform:translateX(0);opacity:1}}
+.hl{background:rgba(59,130,246,.28);border-radius:2px;padding:0 2px}
+.empty{text-align:center;padding:50px 20px;color:var(--muted)}
+.empty .eico{font-size:42px;margin-bottom:11px}
+.empty h3{font-size:14px;font-weight:600;margin-bottom:4px;color:var(--text2)}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+</style>
+</head>
+<body>
+<div class="ov" id="ov" onclick="closeSidebar()"></div>
+
+<header>
+  <button class="hbtn" id="menuBtn" onclick="toggleSidebar()" style="display:none">☰</button>
+  <div class="logo">Lapto<span>Parts</span></div>
+  <div class="sync-pill">
+    <div class="sync-dot" id="syncDot"></div>
+    <span id="syncLbl">محلي</span>
+  </div>
+  <div class="hstats" id="hstats"></div>
+  <button class="hbtn" onclick="openExport()" title="تصدير">📤</button>
+  <button class="hbtn" onclick="openSettings()" title="إعدادات Firebase">⚙️</button>
+</header>
+
+<div class="app-wrap">
+  <div class="main" id="main">
+    <div class="setup-banner" id="setupBanner" style="display:none">
+      <h3>🔥 ربط Firebase للمزامنة بين الفنيين</h3>
+      <p>لتفعيل المزامنة الفورية بين جميع الأجهزة، اتبع هذه الخطوات مرة واحدة فقط:</p>
+      <div class="ssteps">
+        <div class="sstep"><div class="snum">1</div><div class="stxt">اذهب إلى <code>console.firebase.google.com</code> وأنشئ مشروعاً مجانياً</div></div>
+        <div class="sstep"><div class="snum">2</div><div class="stxt">فعّل <code>Realtime Database</code> واختر <code>Start in test mode</code></div></div>
+        <div class="sstep"><div class="snum">3</div><div class="stxt">انقر ⚙️ أعلى يسار، افتح <code>إعدادات المشروع</code>، انسخ <code>firebaseConfig</code> والصقه هنا</div></div>
+        <div class="sstep"><div class="snum">4</div><div class="stxt">أرسل نفس ملف HTML لكل الفنيين — البيانات ستُزامن لحظياً بين الكل</div></div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-wrap">
+        <span class="si">🔍</span>
+        <input class="search-input" type="search" id="searchInput" placeholder="ابحث بالموديل أو القطعة أو الملاحظة...">
+      </div>
+      <div class="filter-btns">
+        <button class="fbtn active" onclick="setFilter('all',this)">الكل</button>
+        <button class="fbtn" onclick="setFilter('pending',this)">غير منجز</button>
+        <button class="fbtn" onclick="setFilter('done',this)">✅ منجز</button>
+      </div>
+      <button class="add-btn" onclick="openAddDevice()">+ جهاز</button>
+    </div>
+    <div id="devCont"></div>
+  </div>
+  <div class="sidebar" id="sidebar">
+    <div class="sb-head"><h3>الموديلات</h3></div>
+    <div class="model-list" id="modelList"></div>
+    <button class="sb-add" onclick="openAddModel()">+ موديل جديد</button>
+  </div>
+</div>
+
+<div class="mob-nav">
+  <button onclick="setFilter('all',null)" id="mn1"><span class="mico">🗂</span>الكل</button>
+  <button onclick="setFilter('pending',null)" id="mn2"><span class="mico">⏳</span>معلق</button>
+  <button onclick="setFilter('done',null)" id="mn3"><span class="mico">✅</span>منجز</button>
+  <button onclick="toggleSidebar()" id="mn4"><span class="mico">💻</span>موديلات</button>
+</div>
+
+<div id="toastWrap"></div>
+
+<!-- DEVICE MODAL -->
+<div class="modal-ov" id="deviceModal" style="display:none">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mhead"><h2 id="devModalTitle">إضافة جهاز</h2><button class="mclose" onclick="cm('deviceModal')">×</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">الموديل</label><select class="fsel" id="fModel"></select></div>
+      <div class="fg"><label class="fl">الاسم / الرقم التسلسلي</label><input class="fi" type="text" id="fName" placeholder="Unit-001 أو SN-ABC123"></div>
+      <div class="fg"><label class="fl">ملاحظات</label><textarea class="fta" id="fNotes" placeholder="أي ملاحظات عن الجهاز..."></textarea></div>
+      <div class="fg"><label class="fl">القطع وحالتها</label><div class="pe" id="pe"></div><button class="apbtn" onclick="addPRow()">+ قطعة</button></div>
+    </div>
+    <div class="mfoot"><button class="btn bg" onclick="cm('deviceModal')">إلغاء</button><button class="btn bp" onclick="saveDev()">💾 حفظ</button></div>
+  </div>
+</div>
+
+<!-- MODEL MODAL -->
+<div class="modal-ov" id="modelModal" style="display:none">
+  <div class="modal" style="max-width:370px">
+    <div class="mhandle"></div>
+    <div class="mhead"><h2>موديل جديد</h2><button class="mclose" onclick="cm('modelModal')">×</button></div>
+    <div class="mbody">
+      <div class="fg"><label class="fl">الماركة</label>
+        <select class="fsel" id="fBrand"><option>HP</option><option>Dell</option><option>Lenovo</option><option>Apple</option><option>Asus</option><option>Acer</option><option>MSI</option><option>Samsung</option><option>Toshiba</option><option>Huawei</option><option>أخرى</option></select>
+      </div>
+      <div class="fg"><label class="fl">اسم الموديل</label><input class="fi" type="text" id="fMName" placeholder="مثال: ProBook 450 G7"></div>
+    </div>
+    <div class="mfoot"><button class="btn bg" onclick="cm('modelModal')">إلغاء</button><button class="btn bp" onclick="saveMod()">إضافة</button></div>
+  </div>
+</div>
+
+<!-- TRANSFER MODAL -->
+<div class="modal-ov" id="transferModal" style="display:none">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mhead"><h2>🔧 استخدام قطعة من جهاز</h2><button class="mclose" onclick="cm('transferModal')">×</button></div>
+    <div class="mbody">
+      <p style="color:var(--muted);font-size:12px;margin-bottom:13px">اختر القطع التي ستُستخدم — حالتها ستصبح "مستخدمة" تلقائياً</p>
+      <div id="tParts"></div>
+      <div class="fg" style="margin-top:11px"><label class="fl">ملاحظة (اختياري)</label><input class="fi" type="text" id="fTNote" placeholder="مثال: الشاشة نُقلت إلى Unit-005"></div>
+    </div>
+    <div class="mfoot"><button class="btn bg" onclick="cm('transferModal')">إلغاء</button><button class="btn bp" onclick="confirmTrans()">✅ تأكيد</button></div>
+  </div>
+</div>
+
+<!-- EXPORT MODAL -->
+<div class="modal-ov" id="exportModal" style="display:none">
+  <div class="modal" style="max-width:400px">
+    <div class="mhandle"></div>
+    <div class="mhead"><h2>📤 تصدير واستيراد</h2><button class="mclose" onclick="cm('exportModal')">×</button></div>
+    <div class="mbody">
+      <div class="egrid">
+        <button class="ebtn" onclick="expJSON()"><div class="eico">📦</div><div class="et">نسخة احتياطية</div><div class="es">JSON كامل</div></button>
+        <button class="ebtn" onclick="expCSV()"><div class="eico">📊</div><div class="et">تصدير Excel</div><div class="es">CSV</div></button>
+        <button class="ebtn" onclick="expPrint()"><div class="eico">🖨️</div><div class="et">طباعة / PDF</div><div class="es">تقرير مرئي</div></button>
+        <button class="ebtn" onclick="document.getElementById('impFile').click()"><div class="eico">📥</div><div class="et">استيراد</div><div class="es">JSON</div></button>
+      </div>
+      <input type="file" id="impFile" accept=".json" style="display:none" onchange="handleImp(event)">
+    </div>
+  </div>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div class="modal-ov" id="settingsModal" style="display:none">
+  <div class="modal" style="max-width:460px">
+    <div class="mhandle"></div>
+    <div class="mhead"><h2>⚙️ إعدادات Firebase</h2><button class="mclose" onclick="cm('settingsModal')">×</button></div>
+    <div class="mbody">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:13px;line-height:1.8">
+        الصق هنا إعدادات Firebase لتفعيل المزامنة السحابية. الإعدادات تُحفظ في هذا الجهاز فقط. كل فني يُدخل نفس الإعداد مرة واحدة.
+      </p>
+      <div class="fg"><label class="fl">Firebase Config (JSON)</label>
+        <textarea class="fta" id="fFBConf" style="min-height:150px;font-family:monospace;font-size:11px" placeholder='{&#10;  "apiKey": "...",&#10;  "authDomain": "...",&#10;  "databaseURL": "https://YOUR-PROJECT-default-rtdb.firebaseio.com",&#10;  "projectId": "...",&#10;  "storageBucket": "...",&#10;  "messagingSenderId": "...",&#10;  "appId": "..."&#10;}'></textarea>
+      </div>
+      <p style="font-size:11px;color:var(--muted);line-height:1.7">⚠️ تأكد أن <code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-family:monospace">databaseURL</code> موجود وصحيح</p>
+    </div>
+    <div class="mfoot">
+      <button class="btn bd" onclick="clearFB()">مسح الإعداد</button>
+      <button class="btn bg" onclick="cm('settingsModal')">إلغاء</button>
+      <button class="btn bp" onclick="saveFBConf()">💾 حفظ وتطبيق</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── CONSTANTS ──────────────────────────────────────────
+const CP = ['الشاشة','البورد الأم','الرام','الهارد/SSD','البطارية','الكيبورد',
+  'التشبيك Wifi','المبرد/فان','الشارج','الغطاء','كرت الشاشة','البروسيسور',
+  'مكبر الصوت','كاميرا','USB Port','DC Jack'];
+
+// ── STATE ──────────────────────────────────────────────
+let S = { models:[], devices:[], pending:[] };
+let editId = null, transId = null;
+let filter = 'all', activeModel = 'all', q = '';
+let fbUnsub = null, online = navigator.onLine;
+
+// ── LOCAL ──────────────────────────────────────────────
+function lsave(){ try{ localStorage.setItem('lp',JSON.stringify(S)); }catch(e){} }
+function lload(){
+  try{ const s=localStorage.getItem('lp'); if(s){ const p=JSON.parse(s); S={models:[],devices:[],pending:[],...p}; } }catch(e){}
+}
+
+// ── FIREBASE ──────────────────────────────────────────
+function getFBC(){ try{ const s=localStorage.getItem('lp_fb'); return s?JSON.parse(s):null; }catch(e){ return null; } }
+function isFBConf(cfg){ return cfg && cfg.apiKey && !cfg.apiKey.includes('PASTE') && cfg.databaseURL; }
+
+async function initFB(){
+  const cfg = getFBC();
+  if(!isFBConf(cfg)){ document.getElementById('setupBanner').style.display='block'; setSyncSt('local','محلي فقط'); return; }
+  document.getElementById('setupBanner').style.display='none';
+  const mods = window._fbMods;
+  if(!mods){ window.addEventListener('fbModsReady',()=>initFB(),{once:true}); return; }
+  try{
+    const existing = mods.getApps();
+    const app = existing.length ? existing[0] : mods.initializeApp(cfg);
+    const db = mods.getDatabase(app);
+    window._db = db; window._ref = mods.ref; window._set = mods.set;
+    window._onValue = mods.onValue; window._off = mods.off;
+    window._fbReady = true;
+    subFB();
+  } catch(e){ console.error(e); setSyncSt('error','خطأ في Firebase'); toast('خطأ في الاتصال بـ Firebase','error'); }
+}
+
+function subFB(){
+  if(!window._fbReady) return;
+  if(fbUnsub){ fbUnsub(); fbUnsub=null; }
+  setSyncSt('syncing','جاري الاتصال...');
+  const r = window._ref(window._db,'lp');
+  fbUnsub = window._onValue(r, snap=>{
+    const v = snap.val();
+    if(v){
+      S.models = v.models ? Object.values(v.models) : [];
+      S.devices = v.devices ? Object.values(v.devices) : [];
+      lsave(); render();
+    }
+    setSyncSt('online','متصل ☁️');
+    flushPending();
+  }, err=>{ console.error(err); setSyncSt('error','خطأ في الاتصال'); });
+}
+
+async function push2FB(){
+  if(!window._fbReady || !online){ return; }
+  try{
+    setSyncSt('syncing','جاري الحفظ...');
+    const mo={}, do_={}; 
+    S.models.forEach(m=>mo[m.id]=m); 
+    S.devices.forEach(d=>do_[d.id]=d);
+    await window._set(window._ref(window._db,'lp'), {models:mo, devices:do_});
+    setSyncSt('online','متصل ☁️');
+  } catch(e){ console.error(e); S.pending.push(Date.now()); lsave(); setSyncSt('error','فشل الحفظ'); }
+}
+
+async function flushPending(){
+  if(!window._fbReady || !online || !S.pending.length) return;
+  S.pending=[];
+  await push2FB();
+  if(!S.pending.length) toast('تم رفع جميع التغييرات للسحابة ✅','success');
+}
+
+window.addEventListener('online',()=>{ online=true; setSyncSt('syncing','...'); flushPending(); subFB(); toast('عاد الاتصال — جاري المزامنة','info'); });
+window.addEventListener('offline',()=>{ online=false; setSyncSt('offline','أوف لاين'); toast('أوف لاين — سيُزامن عند الاتصال','info'); });
+
+function setSyncSt(cls,txt){
+  document.getElementById('syncDot').className='sync-dot '+cls;
+  document.getElementById('syncLbl').textContent=txt;
+}
+
+// ── SETTINGS ──────────────────────────────────────────
+function openSettings(){
+  const c=getFBC(); if(c) document.getElementById('fFBConf').value=JSON.stringify(c,null,2);
+  document.getElementById('settingsModal').style.display='flex';
+}
+async function saveFBConf(){
+  try{
+    const c=JSON.parse(document.getElementById('fFBConf').value.trim());
+    if(!c.apiKey||!c.databaseURL) throw new Error();
+    localStorage.setItem('lp_fb',JSON.stringify(c));
+    cm('settingsModal'); toast('تم حفظ الإعداد — جاري الاتصال...','info');
+    window._fbReady=false; await initFB();
+  } catch(e){ toast('الـ JSON غير صحيح — تحقق منه','error'); }
+}
+function clearFB(){
+  if(!confirm('مسح إعداد Firebase؟ ستعمل محلياً فقط.')) return;
+  localStorage.removeItem('lp_fb');
+  if(fbUnsub){fbUnsub();fbUnsub=null;}
+  window._fbReady=false;
+  setSyncSt('local','محلي فقط');
+  document.getElementById('setupBanner').style.display='block';
+  cm('settingsModal');
+}
+
+// ── MODELS ────────────────────────────────────────────
+function openAddModel(){ document.getElementById('fMName').value=''; document.getElementById('modelModal').style.display='flex'; setTimeout(()=>document.getElementById('fMName').focus(),200); }
+async function saveMod(){
+  const name=document.getElementById('fMName').value.trim();
+  const brand=document.getElementById('fBrand').value;
+  if(!name) return toast('أدخل اسم الموديل','error');
+  S.models.push({id:uid(),name,brand}); lsave(); cm('modelModal'); render();
+  await push2FB(); toast(`تم إضافة ${brand} ${name}`,'success');
+}
+
+// ── DEVICES ──────────────────────────────────────────
+function openAddDevice(mid){
+  editId=null;
+  document.getElementById('devModalTitle').textContent='إضافة جهاز جديد';
+  document.getElementById('fName').value='';
+  document.getElementById('fNotes').value='';
+  fillModelSel(mid||(activeModel!=='all'?activeModel:''));
+  const pe=document.getElementById('pe'); pe.innerHTML='';
+  ['الشاشة','البورد الأم','الرام','الهارد/SSD','البطارية'].forEach(p=>addPRow(p,'good'));
+  document.getElementById('deviceModal').style.display='flex';
+  setTimeout(()=>document.getElementById('fName').focus(),200);
+}
+function openEditDevice(id){
+  const d=S.devices.find(x=>x.id===id); if(!d) return;
+  editId=id;
+  document.getElementById('devModalTitle').textContent='تعديل الجهاز';
+  document.getElementById('fName').value=d.name||'';
+  document.getElementById('fNotes').value=d.notes||'';
+  fillModelSel(d.modelId);
+  const pe=document.getElementById('pe'); pe.innerHTML='';
+  (d.parts||[]).forEach(p=>addPRow(p.name,p.status));
+  document.getElementById('deviceModal').style.display='flex';
+}
+function fillModelSel(sel){
+  const el=document.getElementById('fModel');
+  el.innerHTML=S.models.map(m=>`<option value="${m.id}" ${m.id===sel?'selected':''}>${m.brand} ${m.name}</option>`).join('');
+  if(!S.models.length) el.innerHTML='<option value="">— أضف موديلاً أولاً —</option>';
+}
+function addPRow(name='',status='good'){
+  const pe=document.getElementById('pe');
+  const id=uid(); const div=document.createElement('div');
+  div.className='prow'; div.id='pr_'+id;
+  div.innerHTML=`<input type="text" value="${esc(name)}" placeholder="اسم القطعة" list="cp_${id}">
+    <datalist id="cp_${id}">${CP.map(p=>`<option value="${p}">`).join('')}</datalist>
+    <select>
+      <option value="good" ${status==='good'?'selected':''}>✅ سليمة</option>
+      <option value="bad" ${status==='bad'?'selected':''}>❌ تالفة</option>
+      <option value="used" ${status==='used'?'selected':''}>🔧 مستخدمة</option>
+    </select>
+    <button class="rmbtn" onclick="document.getElementById('pr_${id}').remove()">×</button>`;
+  pe.appendChild(div);
+}
+async function saveDev(){
+  const modelId=document.getElementById('fModel').value;
+  const name=document.getElementById('fName').value.trim();
+  const notes=document.getElementById('fNotes').value.trim();
+  if(!modelId) return toast('اختر الموديل أولاً','error');
+  const parts=[];
+  document.querySelectorAll('#pe .prow').forEach(row=>{
+    const n=row.querySelector('input').value.trim();
+    const s=row.querySelector('select').value;
+    if(n) parts.push({name:n,status:s});
+  });
+  if(editId){
+    const d=S.devices.find(x=>x.id===editId);
+    Object.assign(d,{modelId,name,notes,parts,updatedAt:Date.now()});
+    toast('تم التحديث','success');
+  } else {
+    S.devices.push({id:uid(),modelId,name,notes,parts,done:false,createdAt:Date.now(),updatedAt:Date.now()});
+    toast('تم إضافة الجهاز ✅','success');
+  }
+  lsave(); cm('deviceModal'); render(); await push2FB();
+}
+async function delDev(id){
+  if(!confirm('حذف هذا الجهاز؟')) return;
+  S.devices=S.devices.filter(d=>d.id!==id);
+  lsave(); render(); await push2FB(); toast('تم الحذف','info');
+}
+async function toggleDone(id){
+  const d=S.devices.find(x=>x.id===id); if(!d) return;
+  d.done=!d.done; d.updatedAt=Date.now();
+  lsave(); render(); await push2FB();
+  toast(d.done?'✅ منجز':'↩ إلغاء الإنجاز','info');
+}
+async function cyclePart(devId,partName){
+  const d=S.devices.find(x=>x.id===devId); if(!d) return;
+  const p=d.parts.find(x=>x.name===partName); if(!p) return;
+  const cy={good:'bad',bad:'used',used:'good'};
+  p.status=cy[p.status]||'good'; d.updatedAt=Date.now();
+  lsave(); render(); push2FB();
+}
+
+// ── TRANSFER ──────────────────────────────────────────
+function openTrans(id){
+  transId=id;
+  const d=S.devices.find(x=>x.id===id); if(!d) return;
+  const good=(d.parts||[]).filter(p=>p.status==='good');
+  if(!good.length) return toast('لا توجد قطع سليمة','error');
+  document.getElementById('tParts').innerHTML=good.map((p,i)=>
+    `<div class="ti" onclick="this.querySelector('input').click()">
+      <input type="checkbox" id="tp_${i}" data-part="${esc(p.name)}">
+      <label for="tp_${i}">🟢 ${p.name}</label>
+    </div>`
+  ).join('');
+  document.getElementById('fTNote').value='';
+  document.getElementById('transferModal').style.display='flex';
+}
+async function confirmTrans(){
+  const d=S.devices.find(x=>x.id===transId); if(!d) return;
+  const note=document.getElementById('fTNote').value.trim();
+  let cnt=0;
+  document.querySelectorAll('#tParts input:checked').forEach(cb=>{
+    const p=d.parts.find(x=>x.name===cb.dataset.part&&x.status==='good');
+    if(p){p.status='used';cnt++;}
+  });
+  if(!cnt) return toast('اختر قطعة واحدة على الأقل','error');
+  if(note) d.notes=(d.notes?d.notes+'\n':'')+`🔧 ${note}`;
+  if(!d.parts.some(p=>p.status==='good')) d.done=true;
+  d.updatedAt=Date.now();
+  lsave(); cm('transferModal'); render(); await push2FB();
+  toast(`تم تحديد ${cnt} قطعة كمستخدمة`,'success');
+}
+
+// ── EXPORT ───────────────────────────────────────────
+function openExport(){ document.getElementById('exportModal').style.display='flex'; }
+function expJSON(){
+  dl(new Blob([JSON.stringify(S,null,2)],{type:'application/json'}),`laptoparts-${ds()}.json`);
+  cm('exportModal');
+}
+function expCSV(){
+  const rows=[['الموديل','الاسم','الحالة','سليمة','تالفة','مستخدمة','ملاحظات']];
+  S.devices.forEach(d=>{
+    const m=S.models.find(x=>x.id===d.modelId)||{brand:'?',name:'?'};
+    const g=(d.parts||[]).filter(p=>p.status==='good').map(p=>p.name).join('،');
+    const b=(d.parts||[]).filter(p=>p.status==='bad').map(p=>p.name).join('،');
+    const u=(d.parts||[]).filter(p=>p.status==='used').map(p=>p.name).join('،');
+    const st=d.done?'منجز':devSt(d)==='partial'?'جزئي':'تالف';
+    rows.push([`${m.brand} ${m.name}`,d.name||'',st,g,b,u,(d.notes||'').replace(/\n/g,' ')]);
+  });
+  const csv='\uFEFF'+rows.map(r=>r.map(v=>`"${v}"`).join(',')).join('\n');
+  dl(new Blob([csv],{type:'text/csv;charset=utf-8'}),`laptoparts-${ds()}.csv`);
+  cm('exportModal');
+}
+function expPrint(){
+  cm('exportModal');
+  const win=window.open('','_blank');
+  const rows=S.devices.map(d=>{
+    const m=S.models.find(x=>x.id===d.modelId)||{brand:'?',name:'?'};
+    const g=(d.parts||[]).filter(p=>p.status==='good').map(p=>p.name).join('، ');
+    const b=(d.parts||[]).filter(p=>p.status==='bad').map(p=>p.name).join('، ');
+    const u=(d.parts||[]).filter(p=>p.status==='used').map(p=>p.name).join('، ');
+    const st=d.done?'✅ منجز':devSt(d)==='partial'?'⚠️ جزئي':'❌ تالف';
+    return `<tr><td>${m.brand} ${m.name}</td><td>${d.name||''}</td><td>${st}</td><td style="color:#059669">${g||'—'}</td><td style="color:#dc2626">${b||'—'}</td><td style="color:#d97706">${u||'—'}</td><td>${(d.notes||'').replace(/\n/g,'<br>')}</td></tr>`;
+  }).join('');
+  const done=S.devices.filter(d=>d.done||devSt(d)==='done').length;
+  win.document.write(`<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>LaptoParts تقرير</title>
+  <style>body{font-family:Arial,sans-serif;padding:24px;font-size:13px;color:#1e293b}h1{margin-bottom:4px;color:#1e40af}p{margin-bottom:16px;color:#64748b}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #e2e8f0;padding:7px 10px;text-align:right}th{background:#eff6ff;font-weight:700;color:#1e40af}tr:nth-child(even){background:#f8fafc}@media print{button{display:none}}</style></head>
+  <body><h1>📋 تقرير مستودع اللابتوبات</h1><p>التاريخ: ${new Date().toLocaleDateString('ar-SA')} | إجمالي: <strong>${S.devices.length}</strong> | منجز: <strong>${done}</strong> | معلق: <strong>${S.devices.length-done}</strong></p>
+  <table><thead><tr><th>الموديل</th><th>الاسم</th><th>الحالة</th><th>سليمة</th><th>تالفة</th><th>مستخدمة</th><th>ملاحظات</th></tr></thead><tbody>${rows}</tbody></table>
+  <br><button onclick="window.print()" style="background:#1d4ed8;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-size:14px">🖨️ طباعة</button></body></html>`);
+  win.document.close();
+}
+function handleImp(e){
+  const f=e.target.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=async ev=>{
+    try{
+      const imp=JSON.parse(ev.target.result);
+      if(!imp.models||!imp.devices) throw new Error();
+      if(!confirm(`استيراد ${imp.devices.length} جهاز؟ ستُستبدل البيانات الحالية.`)) return;
+      S.models=imp.models; S.devices=imp.devices;
+      lsave(); render(); await push2FB();
+      toast('تم الاستيراد بنجاح','success'); cm('exportModal');
+    } catch(err){ toast('ملف غير صالح','error'); }
+  };
+  r.readAsText(f); e.target.value='';
+}
+function dl(blob,name){ const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=name; a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),5000); }
+
+// ── RENDER ────────────────────────────────────────────
+function devSt(d){
+  if(d.done) return 'done';
+  const hg=(d.parts||[]).some(p=>p.status==='good');
+  const hb=(d.parts||[]).some(p=>p.status==='bad'||p.status==='used');
+  if(hg&&!hb) return 'done';
+  if(hg&&hb) return 'partial';
+  return 'broken';
+}
+
+function setFilter(f,btn){
+  filter=f;
+  if(btn){ document.querySelectorAll('.fbtn').forEach(b=>b.classList.remove('active')); btn.classList.add('active'); }
+  render();
+}
+function setActiveModel(id){
+  activeModel=id;
+  document.querySelectorAll('.mitem').forEach(el=>el.classList.toggle('active',el.dataset.id===id));
+  render();
+  if(window.innerWidth<=680) closeSidebar();
+}
+document.getElementById('searchInput').addEventListener('input',e=>{ q=e.target.value.trim().toLowerCase(); render(); });
+
+function render(){
+  const total=S.devices.length;
+  const done=S.devices.filter(d=>d.done||devSt(d)==='done').length;
+  const gp=S.devices.reduce((a,d)=>a+(d.parts||[]).filter(p=>p.status==='good').length,0);
+  document.getElementById('hstats').innerHTML=`
+    <div class="hstat"><div class="v" style="color:var(--accent2)">${total}</div><div class="l">إجمالي</div></div>
+    <div class="hstat"><div class="v" style="color:var(--green)">${done}</div><div class="l">منجز</div></div>
+    <div class="hstat"><div class="v" style="color:var(--yellow)">${total-done}</div><div class="l">معلق</div></div>
+    <div class="hstat"><div class="v" style="color:var(--accent)">${gp}</div><div class="l">قطع ✅</div></div>`;
+
+  // Sidebar
+  const grp={}, dn={};
+  S.devices.forEach(d=>{ grp[d.modelId]=(grp[d.modelId]||0)+1; });
+  S.devices.forEach(d=>{ if(d.done||devSt(d)==='done') dn[d.modelId]=(dn[d.modelId]||0)+1; });
+  document.getElementById('modelList').innerHTML=
+    `<div class="mitem ${activeModel==='all'?'active':''}" data-id="all" onclick="setActiveModel('all')">
+      <div><div class="mn">🗂 كل الأجهزة</div></div><span class="mc">${S.devices.length}</span>
+    </div>`+
+    S.models.map(m=>{
+      const cnt=grp[m.id]||0, dc=dn[m.id]||0;
+      const pct=cnt?Math.round(dc/cnt*100):0;
+      const col=pct===100?'var(--green)':pct>50?'var(--accent)':'var(--yellow)';
+      return `<div class="mitem ${activeModel===m.id?'active':''}" data-id="${m.id}" onclick="setActiveModel('${m.id}')">
+        <div style="flex:1;min-width:0">
+          <div class="mn">${m.brand} ${m.name}</div>
+          <div class="msub">${dc}/${cnt} منجز • ${pct}%</div>
+          <div class="mbar"><div class="mbar-fill" style="width:${pct}%;background:${col}"></div></div>
+        </div>
+        <span class="mc">${cnt}</span>
+      </div>`;
+    }).join('');
+
+  // Filter
+  let devs=S.devices;
+  if(activeModel!=='all') devs=devs.filter(d=>d.modelId===activeModel);
+  if(filter==='done') devs=devs.filter(d=>d.done||devSt(d)==='done');
+  if(filter==='pending') devs=devs.filter(d=>!d.done&&devSt(d)!=='done');
+  if(q) devs=devs.filter(d=>{
+    const m=S.models.find(x=>x.id===d.modelId);
+    return [(m?m.brand+' '+m.name:''),d.name,d.notes,...(d.parts||[]).map(p=>p.name)].join(' ').toLowerCase().includes(q);
+  });
+
+  const cont=document.getElementById('devCont');
+  if(!devs.length){ cont.innerHTML=`<div class="empty"><div class="eico">📦</div><h3>لا توجد أجهزة</h3><p>أضف جهازاً أو غيّر الفلتر</p></div>`; return; }
+
+  const byM={};
+  devs.forEach(d=>(byM[d.modelId]=byM[d.modelId]||[]).push(d));
+  cont.innerHTML=Object.entries(byM).map(([mid,mdevs])=>{
+    const m=S.models.find(x=>x.id===mid)||{brand:'?',name:'?'};
+    const dc=mdevs.filter(d=>d.done||devSt(d)==='done').length;
+    const pct=mdevs.length?Math.round(dc/mdevs.length*100):0;
+    const col=pct===100?'var(--green)':pct>50?'var(--accent)':'var(--yellow)';
+    return `
+      <div class="sec-head">
+        <span class="sec-title">💻 ${m.brand} ${m.name}</span>
+        <span class="bdg">${mdevs.length} جهاز</span>
+        <span class="bdg g">${dc} منجز</span>
+        <span class="pct">${pct}%</span>
+        <button class="btn bg" style="font-size:11px;padding:5px 9px" onclick="openAddDevice('${mid}')">+ جهاز</button>
+      </div>
+      <div class="sec-prog"><div class="sec-prog-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="grid">${mdevs.map(d=>renderCard(d)).join('')}</div>`;
+  }).join('');
+}
+
+function renderCard(d){
+  const m=S.models.find(x=>x.id===d.modelId)||{brand:'',name:''};
+  const st=d.done?'done':devSt(d);
+  const stL={done:'✅ منجز',partial:'⚠️ جزئي',broken:'❌ تالف'}[st];
+  const parts=d.parts||[];
+  const good=parts.filter(p=>p.status==='good');
+  const bad=parts.filter(p=>p.status==='bad');
+  const used=parts.filter(p=>p.status==='used');
+  const total=parts.length;
+  const pct=total?Math.round(good.length/total*100):0;
+  const col=pct===100?'var(--green)':pct>50?'var(--accent)':'var(--yellow)';
+  const pt=(p,cls)=>`<span class="ptag ${cls}" onclick="cyclePart('${d.id}','${esc(p.name)}')" title="انقر لتغيير الحالة"><span class="pdot"></span>${hl(p.name)}</span>`;
+  return `<div class="card ${d.done?'done':''}" id="dev_${d.id}">
+    <div class="ch">
+      <div class="cid">#${d.id.slice(-4)}</div>
+      <div class="cname" title="${d.name||m.brand+' '+m.name}">${d.name||m.brand+' '+m.name}</div>
+      <span class="stbdg ${st}">${stL}</span>
+    </div>
+    <div class="cb">
+      ${d.notes?`<div class="notes-r" title="${d.notes}">📝 ${hl(d.notes.split('\n')[0])}</div>`:''}
+      <div class="cprog-wrap">
+        <div class="cprog-bar"><div class="cprog-fill" style="width:${pct}%;background:${col}"></div></div>
+        <div class="cprog-lbl"><span>${good.length} سليمة من ${total}</span><span>${pct}%</span></div>
+      </div>
+      ${good.length?`<div class="psec"><div class="plbl">✅ سليمة</div><div class="pgrid">${good.map(p=>pt(p,'good')).join('')}</div></div>`:''}
+      ${bad.length?`<div class="psec"><div class="plbl">❌ تالفة</div><div class="pgrid">${bad.map(p=>pt(p,'bad')).join('')}</div></div>`:''}
+      ${used.length?`<div class="psec"><div class="plbl">🔧 مستخدمة</div><div class="pgrid">${used.map(p=>pt(p,'used')).join('')}</div></div>`:''}
+    </div>
+    <div class="ca">
+      <button class="btn bw" onclick="openTrans('${d.id}')">🔧 استخدم</button>
+      <button class="btn ${d.done?'bg':'bs'}" onclick="toggleDone('${d.id}')">${d.done?'↩ إلغاء':'✅ منجز'}</button>
+      <button class="btn bg" onclick="openEditDevice('${d.id}')">✏️</button>
+      <button class="btn bd" onclick="delDev('${d.id}')">🗑</button>
+    </div>
+  </div>`;
+}
+
+// ── TOAST ─────────────────────────────────────────────
+function toast(msg,type='info'){
+  const w=document.getElementById('toastWrap');
+  const el=document.createElement('div');
+  el.className=`toast ${type}`; el.textContent=msg;
+  w.appendChild(el); setTimeout(()=>el.remove(),3500);
+}
+
+// ── SIDEBAR MOBILE ────────────────────────────────────
+function toggleSidebar(){ document.getElementById('sidebar').classList.toggle('open'); document.getElementById('ov').classList.toggle('open'); }
+function closeSidebar(){ document.getElementById('sidebar').classList.remove('open'); document.getElementById('ov').classList.remove('open'); }
+
+// ── MODALS ────────────────────────────────────────────
+function cm(id){ document.getElementById(id).style.display='none'; }
+document.querySelectorAll('.modal-ov').forEach(ov=>ov.addEventListener('click',e=>{ if(e.target===ov) ov.style.display='none'; }));
+
+// ── UTILS ─────────────────────────────────────────────
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function esc(s){ return (s||'').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function hl(t){ if(!q) return t; return t.replace(new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'gi'),m=>`<span class="hl">${m}</span>`); }
+function ds(){ return new Date().toISOString().slice(0,10); }
+
+// ── RESPONSIVE ───────────────────────────────────────
+function chkMob(){ const mob=window.innerWidth<=680; document.getElementById('menuBtn').style.display=mob?'flex':'none'; }
+window.addEventListener('resize',chkMob); chkMob();
+
+// ── PWA MANIFEST ─────────────────────────────────────
+const mf={name:"LaptoParts — مستودع اللابتوبات",short_name:"LaptoParts",description:"نظام إدارة مستودع اللابتوبات",start_url:"./",display:"standalone",background_color:"#0d0f14",theme_color:"#0d0f14",dir:"rtl",lang:"ar",icons:[{src:"data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💻</text></svg>",sizes:"512x512",type:"image/svg+xml"}]};
+document.getElementById('manifestLink').href=URL.createObjectURL(new Blob([JSON.stringify(mf)],{type:'application/json'}));
+
+// ── DEMO DATA ─────────────────────────────────────────
+function loadDemo(){
+  if(S.models.length) return;
+  S.models=[{id:'m1',name:'ProBook 450 G7',brand:'HP'},{id:'m2',name:'Latitude 5510',brand:'Dell'}];
+  S.devices=[
+    {id:'d1',modelId:'m1',name:'Unit-001',notes:'الشاشة تالفة — بقية القطع بخير',parts:[{name:'الشاشة',status:'bad'},{name:'البورد الأم',status:'good'},{name:'الرام',status:'good'},{name:'الهارد/SSD',status:'good'},{name:'البطارية',status:'good'},{name:'الكيبورد',status:'good'}],done:false,createdAt:Date.now()},
+    {id:'d2',modelId:'m1',name:'Unit-002',notes:'البورد تالف — الشاشة ممتازة',parts:[{name:'الشاشة',status:'good'},{name:'البورد الأم',status:'bad'},{name:'الرام',status:'good'},{name:'الهارد/SSD',status:'bad'},{name:'البطارية',status:'good'},{name:'الكيبورد',status:'good'}],done:false,createdAt:Date.now()},
+    {id:'d3',modelId:'m1',name:'Unit-003',notes:'اكتمل الجهاز ✓',parts:[{name:'الشاشة',status:'used'},{name:'البورد الأم',status:'used'},{name:'الرام',status:'good'},{name:'البطارية',status:'good'}],done:true,createdAt:Date.now()},
+    {id:'d4',modelId:'m2',name:'Dell-001',notes:'بطارية وكيبورد تالفين',parts:[{name:'الشاشة',status:'good'},{name:'البورد الأم',status:'good'},{name:'الرام',status:'good'},{name:'البطارية',status:'bad'},{name:'الكيبورد',status:'bad'},{name:'التشبيك Wifi',status:'good'}],done:false,createdAt:Date.now()},
+  ];
+  lsave();
+}
+
+// ── INIT ──────────────────────────────────────────────
+lload(); loadDemo(); render(); initFB();
+</script>
+</body>
+</html>
