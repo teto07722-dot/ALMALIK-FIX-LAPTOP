@@ -10,6 +10,7 @@
 <title>ALMALIK — نظام إدارة الورشة</title>
 <link rel="manifest" href="#" id="mfLink">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   --b0:#06090f;--b1:#0a0e17;--b2:#0f1520;--b3:#141c28;--b4:#1a2333;--b5:#1f2a3c;
@@ -91,8 +92,8 @@ header{background:rgba(6,9,15,.97);border-bottom:1px solid var(--br);padding:0 1
 .nbdg{position:absolute;top:-4px;right:-4px;width:16px;height:16px;border-radius:50%;background:var(--rd);color:#fff;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;border:2px solid var(--b0)}
 
 /* ── LAYOUT ─────────────────────── */
-.aw{display:flex;height:100vh;padding-top:calc(var(--hh) + var(--st))}
-.main{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px;padding-bottom:calc(68px + var(--sb))}
+.aw{display:flex;position:fixed;top:calc(var(--hh) + var(--st));left:0;right:0;bottom:0}
+.main{flex:1;overflow-y:auto;overflow-x:hidden;padding:12px 12px calc(72px + env(safe-area-inset-bottom,0px));-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
 .sb{width:210px;min-width:210px;background:var(--b1);border-left:1px solid var(--br);display:flex;flex-direction:column;overflow:hidden;flex-shrink:0}
 @media(max-width:720px){
   .sb{display:none}
@@ -130,7 +131,8 @@ header{background:rgba(6,9,15,.97);border-bottom:1px solid var(--br);padding:0 1
 
 /* ── TOOLBAR ─────────────────────── */
 .tbar{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;align-items:center}
-.sw{flex:1;min-width:140px;position:relative}
+.tbar-top{display:flex;gap:6px;width:100%;align-items:center;flex-wrap:nowrap}
+.sw{flex:1;min-width:0;position:relative}
 .si-ico{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--tx3);pointer-events:none;font-size:13px}
 .si-inp{width:100%;background:var(--b2);border:1px solid var(--br2);border-radius:var(--r);padding:9px 32px 9px 10px;color:var(--tx);font-family:var(--fn);font-size:13px;outline:none;transition:border .2s;-webkit-appearance:none}
 .si-inp:focus{border-color:var(--cy)}
@@ -334,6 +336,7 @@ header{background:rgba(6,9,15,.97);border-bottom:1px solid var(--br);padding:0 1
 
 /* ── QR/TRACKING ─────────────────── */
 .qr-wrap{background:var(--b3);border:1px solid var(--br2);border-radius:var(--r2);padding:16px;text-align:center;margin-top:10px}
+.qr-wrap #qrCanvas{margin:0 auto;display:inline-block}
 .qr-url{font-family:var(--mo);font-size:11px;color:var(--cy);word-break:break-all;margin-top:10px;padding:8px;background:var(--b4);border-radius:var(--r);border:1px solid var(--br2);text-align:right}
 
 /* ── EXPORT GRID ─────────────────── */
@@ -345,7 +348,7 @@ header{background:rgba(6,9,15,.97);border-bottom:1px solid var(--br);padding:0 1
 .eb .es{font-size:10px;color:var(--tx3)}
 
 /* ── MOBILE NAV ──────────────────── */
-.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(6,9,15,.97);border-top:1px solid var(--br);padding:6px 0;padding-bottom:var(--sb);flex-direction:row;justify-content:space-around;z-index:150;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.mn{display:none;position:fixed;bottom:0;left:0;right:0;background:rgba(6,9,15,.99);border-top:1px solid var(--br);padding:6px 0;padding-bottom:env(safe-area-inset-bottom,0px);flex-direction:row;justify-content:space-around;z-index:150;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 @media(max-width:720px){.mn{display:flex}}
 .mn button{flex:1;background:none;border:none;color:var(--tx3);cursor:pointer;font-family:var(--fn);font-size:9px;display:flex;flex-direction:column;align-items:center;gap:2px;padding:3px 2px;transition:color .15s;min-width:0;user-select:none}
 .mn button.active,.mn button:hover{color:var(--cy)}
@@ -678,7 +681,7 @@ header{background:rgba(6,9,15,.97);border-bottom:1px solid var(--br);padding:0 1
   <div class="mb">
     <p style="font-size:12px;color:var(--tx3);margin-bottom:12px">أرسل هذا الرابط للزبون ليتابع حالة جهازه دون تسجيل دخول</p>
     <div class="qr-wrap">
-      <canvas id="qrCanvas" width="200" height="200" style="border-radius:8px"></canvas>
+      <div id="qrCanvas"></div>
       <div class="qr-url" id="qrURL"></div>
       <div style="display:flex;gap:7px;margin-top:10px">
         <button class="btn bg" onclick="copyQRURL()" style="flex:1;padding:9px">📋 نسخ الرابط</button>
@@ -743,7 +746,11 @@ header{background:rgba(6,9,15,.97);border-bottom:1px solid var(--br);padding:0 1
       <b style="color:var(--cy)">كيف تحصل على Firebase Config؟</b><br>
       1. اذهب إلى <span style="color:var(--cy);font-family:var(--mo)">console.firebase.google.com</span><br>
       2. اختر مشروعك ← إعدادات المشروع ⚙️<br>
-      3. انسخ <span style="color:var(--cy);font-family:var(--mo)">firebaseConfig</span> والصقه هنا
+      3. انسخ <span style="color:var(--cy);font-family:var(--mo)">firebaseConfig</span> والصقه هنا<br><br>
+      <b style="color:var(--yw)">⚠️ مهم لرابط تتبع الزبون:</b><br>
+      في Firebase Console ← Realtime Database ← Rules، تأكد أن:<br>
+      <span style="font-family:var(--mo);color:var(--gn)">"public_repairs":{".read":true,".write":false}</span><br>
+      هذا يسمح للزبون بمشاهدة صيانته دون دخول
     </div>
     <div class="fg"><label class="fl">Firebase Config (JSON)</label>
       <textarea class="fta" id="fFB" style="min-height:150px;font-family:var(--mo);font-size:11px" placeholder='{&#10;  "apiKey": "AIzaSy...",&#10;  "authDomain": "project.firebaseapp.com",&#10;  "databaseURL": "https://project-default-rtdb.firebaseio.com",&#10;  "projectId": "project-id",&#10;  "storageBucket": "project.appspot.com",&#10;  "messagingSenderId": "123456",&#10;  "appId": "1:123:web:abc"&#10;}'></textarea>
@@ -868,6 +875,18 @@ async function p2FB(){
   try{
     setSS('syncing','حفظ...');
     await window._set(window._ref(window._db,'almalik'),DB);
+    // Also write public repair snapshots for customer tracking (no auth needed)
+    const pubReps={};
+    Object.values(DB.repairs||{}).forEach(r=>{
+      pubReps[r.id]={
+        id:r.id,customerName:r.customerName,deviceBrand:r.deviceBrand,deviceModel:r.deviceModel,
+        status:r.status,progress:r.progress||0,progressNotes:r.progressNotes||'',
+        agreedPrice:r.agreedPrice||0,paid:r.paid||false,eta:r.eta||'',
+        faultConfirmed:r.faultConfirmed||'',updatedAt:r.updatedAt||0,createdAt:r.createdAt||0,
+        customerPhone:r.customerPhone||''
+      };
+    });
+    await window._set(window._ref(window._db,'public_repairs'),pubReps);
     setSS('online','متصل ☁️');
   }catch(e){
     console.error('Save error:',e);
@@ -1073,7 +1092,7 @@ function rDevPage(){
   const modelParts={};
   Object.values(DB.parts||{}).filter(p=>p.modelId).forEach(p=>(modelParts[p.modelId]=modelParts[p.modelId]||[]).push(p));
   return `<div class="tbar">
-      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" placeholder="بحث..." value="${esc(SQ)}" oninput="SQ=this.value.toLowerCase();rPage()"></div>
+      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" id="searchField" placeholder="بحث..." value="${esc(SQ)}" oninput="handleSearch(this.value)" autocomplete="off"></div>
       <div class="fbs">
         <button class="fb ${devFlt==='all'?'active':''}" onclick="devFlt='all';rPage()">الكل</button>
         <button class="fb ${devFlt==='near'?'active':''}" onclick="devFlt='near';rPage()" style="color:var(--cy)">🟢 قريب</button>
@@ -1164,7 +1183,7 @@ function rRepPage(){
   reps.sort((a,b)=>{const o={new:0,inprog:1,waiting:2,done:3,cancelled:4};return(o[a.status]??5)-(o[b.status]??5)||(b.createdAt-a.createdAt);});
   const cnt=s=>Object.values(DB.repairs||{}).filter(r=>r.status===s).length;
   return `<div class="tbar">
-      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" placeholder="بحث بالاسم أو الجهاز..." value="${esc(SQ)}" oninput="SQ=this.value.toLowerCase();rPage()"></div>
+      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" id="searchField" placeholder="بحث بالاسم أو الجهاز..." value="${esc(SQ)}" oninput="handleSearch(this.value)"></div>
       <div class="fbs">
         <button class="fb ${repFlt==='all'?'active':''}" onclick="repFlt='all';rPage()">الكل</button>
         <button class="fb ${repFlt==='new'?'active':''}" onclick="repFlt='new';rPage()">🆕 (${cnt('new')})</button>
@@ -1226,7 +1245,7 @@ function rPartsPage(){
   if(SQ)parts=parts.filter(p=>[p.name,p.category,p.compat].join(' ').toLowerCase().includes(SQ));
   const byC={};parts.forEach(p=>(byC[p.category]=byC[p.category]||[]).push(p));
   return `<div class="tbar">
-      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" placeholder="بحث..." value="${esc(SQ)}" oninput="SQ=this.value.toLowerCase();rPage()"></div>
+      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" id="searchField" placeholder="بحث..." value="${esc(SQ)}" oninput="handleSearch(this.value)"></div>
       ${can('parts')?`<button class="abtn" onclick="openAddPart()">+ قطعة</button>`:''}
     </div>
     ${parts.length===0?`<div class="empty"><div class="ei">🔩</div><h3>لا توجد قطع غيار مستقلة</h3><p>اضغط + قطعة لإضافة مستودع قطع الغيار</p></div>`:
@@ -1268,7 +1287,7 @@ function rSalesPage(){
   let sales=Object.values(DB.sales||{}).sort((a,b)=>b.date-a.date);
   if(SQ)sales=sales.filter(s=>[s.itemName,s.note,s.by].join(' ').toLowerCase().includes(SQ));
   return `<div class="tbar">
-      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" placeholder="بحث..." value="${esc(SQ)}" oninput="SQ=this.value.toLowerCase();rPage()"></div>
+      <div class="sw"><span class="si-ico">🔍</span><input class="si-inp" type="search" id="searchField" placeholder="بحث..." value="${esc(SQ)}" oninput="handleSearch(this.value)"></div>
       <span class="bdg p" style="padding:7px 11px;align-self:center">إجمالي: ${IQD(Object.values(DB.sales||{}).reduce((a,s)=>a+s.price,0))}</span>
     </div>
     ${sales.length===0?`<div class="empty"><div class="ei">💰</div><h3>لا توجد مبيعات بعد</h3></div>`:
@@ -1500,6 +1519,7 @@ function startRepair(id){progRepairId=id;const r=DB.repairs[id];if(!r)return;_fi
 function openRepProg(id){progRepairId=id;const r=DB.repairs[id];if(!r)return;_fillProgModal(r);document.getElementById('repProgModal').style.display='flex';}
 function _fillProgModal(r){document.getElementById('rpInfo').innerHTML=`<b>${r.customerName}</b> — ${r.deviceBrand||''} ${r.deviceModel||''}<br><span style="color:var(--tx3);font-size:11px">ت: ${r.customerPhone||'—'}</span>`;document.getElementById('fRPrice').value=r.agreedPrice||0;document.getElementById('fRETA').value=r.eta||'';document.getElementById('fRFaultEst').value=r.faultEstimated||'';document.getElementById('fRFaultConf').value=r.faultConfirmed||'';document.getElementById('fRProg').value=r.progress||0;document.getElementById('rpv').textContent=(r.progress||0)+'%';document.getElementById('fRProgNotes').value=r.progressNotes||'';document.getElementById('fRStatus').value=r.status||'inprog';}
 async function saveRepairProg(){const r=DB.repairs[progRepairId];if(!r)return;r.agreedPrice=parseInt(document.getElementById('fRPrice').value)||0;r.eta=document.getElementById('fRETA').value;r.faultEstimated=document.getElementById('fRFaultEst').value;r.faultConfirmed=document.getElementById('fRFaultConf').value;r.progress=parseInt(document.getElementById('fRProg').value)||0;r.progressNotes=document.getElementById('fRProgNotes').value;r.status=document.getElementById('fRStatus').value;r.updatedAt=Date.now();ls();cm('repProgModal');render();await p2FB();toast('تم حفظ التحديث','s');}
+async function saveRepairAndPublic(){await saveRepair();}
 async function markPaid(id){if(!can('acc')){toast('غير مصرح','e');return;}const r=DB.repairs[id];if(!r)return;if(!r.agreedPrice||r.agreedPrice<=0){const pr=parseInt(prompt('أدخل المبلغ المقبوض (دينار عراقي):','0')||'0');if(!pr||pr<=0)return toast('أدخل مبلغاً صحيحاً','e');r.agreedPrice=pr;}if(!confirm(`تأكيد استلام ${IQD(r.agreedPrice)} من ${r.customerName}؟`))return;const sid=uid();DB.sales[sid]={id:sid,type:'repair',itemName:`صيانة: ${r.deviceBrand||''} ${r.deviceModel||''} — ${r.customerName}`,partCat:null,price:r.agreedPrice,note:r.faultConfirmed||'',by:CU.fullname,date:Date.now()};r.paid=true;r.paidAt=Date.now();ls();render();await p2FB();toast(`💰 تم تسجيل ${IQD(r.agreedPrice)}`,'s');}
 async function delRepair(id){if(!can('delete')){toast('غير مصرح','e');return;}if(!confirm('حذف هذه الصيانة؟'))return;delete DB.repairs[id];ls();render();await p2FB();toast('تم الحذف','i');}
 
@@ -1508,31 +1528,30 @@ async function delRepair(id){if(!can('delete')){toast('غير مصرح','e');ret
 // ════════════════════════════════════════════════
 function showQR(id){
   const r=DB.repairs[id];if(!r)return;
-  const base=location.origin+location.pathname;
+  // Build tracking URL - works both on localhost and GitHub Pages
+  const base=location.origin+location.pathname.replace(/\/$/,'');
   const url=`${base}?track=${id}`;
   document.getElementById('qrURL').textContent=url;
-  drawQR(url);
+  // Clear old QR first
+  const qrEl=document.getElementById('qrCanvas');
+  if(qrEl)qrEl.innerHTML='';
   document.getElementById('qrModal').style.display='flex';
+  // Draw QR after modal is visible (needs dimensions)
+  setTimeout(()=>drawQR(url),100);
 }
 function drawQR(text){
-  const canvas=document.getElementById('qrCanvas');
-  const ctx=canvas.getContext('2d');
-  const W=200,H=200;
-  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,W,H);
-  // Simple visual QR representation
-  ctx.fillStyle='#06090f';
-  const cell=4,cols=Math.floor((W-20)/cell),rows=Math.floor((H-20)/cell);
-  let hash=0;for(let i=0;i<text.length;i++)hash=(hash*31+text.charCodeAt(i))&0xffffffff;
-  for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const v=(hash^(r*1234567+c*7654321))%7;if(v>3){ctx.fillRect(10+c*cell,10+r*cell,cell-1,cell-1);}}}
-  // Corner squares
-  [[0,0],[W-30,0],[0,H-30]].forEach(([x,y])=>{
-    ctx.fillStyle='#06090f';ctx.fillRect(10+x,10+y,25,25);
-    ctx.fillStyle='#fff';ctx.fillRect(13+x,13+y,19,19);
-    ctx.fillStyle='#06090f';ctx.fillRect(16+x,16+y,13,13);
-  });
-  // Brand text
-  ctx.fillStyle='#1d4ed8';ctx.font='bold 10px Arial';ctx.textAlign='center';
-  ctx.fillText('ALMALIK',W/2,H-3);
+  const el=document.getElementById('qrCanvas');
+  if(!el)return;
+  el.innerHTML='';
+  el.style.cssText='background:#fff;padding:10px;border-radius:8px;display:inline-block;width:200px;height:200px;box-sizing:border-box';
+  if(window.QRCode){
+    try{
+      new window.QRCode(el,{text,width:180,height:180,colorDark:'#000',colorLight:'#fff',correctLevel:window.QRCode.CorrectLevel.M});
+      return;
+    }catch(e){}
+  }
+  // Fallback: show URL as monospace text in box
+  el.innerHTML=`<div style="font-family:monospace;font-size:9px;word-break:break-all;color:#000;padding:4px;line-height:1.4">${text}</div>`;
 }
 function copyQRURL(){const u=document.getElementById('qrURL').textContent;navigator.clipboard.writeText(u).then(()=>toast('تم نسخ الرابط','s')).catch(()=>{prompt('الرابط:',u);});}
 function shareQRURL(){const u=document.getElementById('qrURL').textContent;if(navigator.share){navigator.share({title:'تتبع صيانتك — ALMALIK',url:u}).catch(()=>{});}else{copyQRURL();}}
@@ -1544,29 +1563,50 @@ function checkTrackMode(){
   const params=new URLSearchParams(location.search);
   const trackId=params.get('track');
   if(!trackId)return false;
-  // Show tracking page
+  // Show tracking page only
   document.getElementById('LS').style.display='none';
   document.getElementById('trackPage').style.display='block';
-  ll(); // load local data
+  // First show from local cache
+  ll();
   renderTrackPage(trackId);
-  // Also try to load from Firebase
+  // Then try Firebase — read from public_repairs (open read access)
   const cfg=getFB();
-  if(isFBOK(cfg)){
-    import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js').then(({initializeApp,getApps})=>{
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js').then(({getDatabase,ref,get})=>{
-        try{
-          const ex=getApps();
-          const app=ex.length?ex[0]:initializeApp(cfg);
-          const db=getDatabase(app);
-          get(ref(db,`almalik/repairs/${trackId}`)).then(snap=>{
-            const v=snap.val();
-            if(v){DB.repairs=DB.repairs||{};DB.repairs[trackId]=v;renderTrackPage(trackId);}
-          }).catch(()=>{});
-        }catch(e){}
-      });
-    });
+  if(isFBOK(cfg)&&window._FM){
+    _loadTrackFromFB(trackId);
+  } else {
+    // Wait for Firebase module to load
+    let w=0;const iv=setInterval(()=>{
+      w++;
+      if(window._FM&&isFBOK(getFB())){clearInterval(iv);_loadTrackFromFB(trackId);}
+      if(w>30)clearInterval(iv);
+    },300);
   }
   return true;
+}
+async function _loadTrackFromFB(trackId){
+  const cfg=getFB();if(!isFBOK(cfg)||!window._FM)return;
+  try{
+    const M=window._FM;
+    const ex=M.getApps();
+    const app=ex.length?ex[0]:M.initializeApp(cfg);
+    const db=M.getDatabase(app);
+    // Try public_repairs first (written by saveAll)
+    const snap=await M.get(M.ref(db,`public_repairs/${trackId}`));
+    let v=snap.val();
+    if(!v){
+      // Fallback: try full repairs path
+      const snap2=await M.get(M.ref(db,`almalik/repairs/${trackId}`));
+      v=snap2.val();
+    }
+    if(v){
+      if(!DB.repairs)DB.repairs={};
+      DB.repairs[trackId]=v;
+      renderTrackPage(trackId);
+    } else {
+      // repair not found in Firebase — show not found
+      renderTrackPage(trackId+'_notfound');
+    }
+  }catch(e){console.warn('Track load error:',e);}
 }
 function renderTrackPage(id){
   const r=(DB.repairs||{})[id];
@@ -1649,6 +1689,24 @@ function isThisWeek(ts){return ts>Date.now()-7*86400000;}
 function isThisMonth(ts){const d=new Date(ts),n=new Date();return d.getMonth()===n.getMonth()&&d.getFullYear()===n.getFullYear();}
 function mname(mid){const m=(DB.models||{})[mid];return m?`${m.brand} ${m.name}`:'?';}
 function devSt(d){if(d.done)return'done';const p=d.parts||[];const hg=p.some(x=>x.status==='good');const hb=p.some(x=>x.status==='bad'||x.status==='used');if(hg&&!hb)return'done';if(hg&&hb)return'partial';return'broken';}
+let searchTimer=null;
+function handleSearch(val){
+  SQ=val.toLowerCase();
+  clearTimeout(searchTimer);
+  searchTimer=setTimeout(()=>{
+    // Update page content but restore focus to search field after
+    const sf=document.getElementById('searchField');
+    const pos=sf?sf.selectionStart:0;
+    rPageContent(); // re-render content only
+    // Restore focus
+    const nsf=document.getElementById('searchField');
+    if(nsf){nsf.focus();try{nsf.setSelectionRange(pos,pos);}catch(e){}}
+  },350);
+}
+function rPageContent(){
+  // render page without scroll reset
+  rPage();
+}
 function setAM(id){amod=id;rSidebar();rPage();if(window.innerWidth<=720)closeSB();}
 function toast(msg,type='i'){const w=document.getElementById('TW');if(!w)return;const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=msg;w.appendChild(el);setTimeout(()=>{try{el.remove();}catch(e){}},3500);}
 function cm(id){const el=document.getElementById(id);if(el)el.style.display='none';}
@@ -1697,6 +1755,7 @@ import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12
 import { getDatabase, ref, set, onValue, off, get } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
 
 window._FM = { initializeApp, getApps, getDatabase, ref, set, onValue, off, get };
+console.log('✅ Firebase modules loaded successfully');
 
 // إشعر الكود الرئيسي بأن Firebase جاهز
 if (typeof isFBOK === 'function' && typeof getFB === 'function' && typeof initFB === 'function') {
