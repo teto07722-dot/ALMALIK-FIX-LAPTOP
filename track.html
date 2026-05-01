@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06090f">
+<title>ALMALIK — تتبع الصيانة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --b0:#06090f;--b2:#0f1520;--b3:#141c28;--b4:#1a2333;
+  --br2:#243550;--br:#1c2840;
+  --cy:#00d4ff;--gn:#00ff88;--rd:#ff4466;--yw:#ffbb00;--pu:#9966ff;--or:#ff7700;
+  --tx:#e2eaf4;--tx2:#7a8fa8;--tx3:#3a4f68;
+  --fn:'Cairo',sans-serif;--mo:'JetBrains Mono',monospace;
+  --r:10px;--r2:14px;--r3:18px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--fn);background:var(--b0);color:var(--tx);min-height:100vh;padding-bottom:40px}
+.wrap{max-width:480px;margin:0 auto;padding:20px 16px}
+/* Logo */
+.logo{text-align:center;padding:28px 0 20px}
+.logo .name{font-size:28px;font-weight:900;letter-spacing:-1px}
+.logo .g{color:var(--cy);text-shadow:0 0 20px rgba(0,212,255,.3)}
+.logo .s{color:var(--pu)}
+.logo .sub{font-size:11px;color:var(--tx3);margin-top:4px;font-family:var(--mo)}
+/* Cards */
+.card{background:var(--b2);border:1px solid var(--br2);border-radius:var(--r3);padding:18px;margin-bottom:12px}
+.lbl{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;font-weight:600;display:block}
+.val{font-size:15px;font-weight:700}
+.repair-id{font-size:26px;font-weight:900;font-family:var(--mo);color:var(--cy);letter-spacing:2px}
+.device-name{font-size:16px;font-weight:700}
+/* Status */
+.status-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.s-icon{font-size:28px}
+.s-text{font-size:15px;font-weight:700;line-height:1.3}
+/* Progress */
+.pbar{height:10px;background:var(--b4);border-radius:5px;overflow:hidden;margin:10px 0 5px}
+.pbar-fill{height:100%;border-radius:5px;transition:width .6s ease}
+.pct-label{font-size:11px;color:var(--tx2);text-align:left;font-family:var(--mo)}
+/* Notes */
+.notes-box{background:var(--b3);border-radius:8px;padding:10px 12px;margin-top:8px;font-size:13px;color:var(--tx2);line-height:1.6}
+/* Info grid */
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.info-item .lbl{font-size:10px;margin-bottom:3px}
+.info-item .val{font-size:13px;font-weight:600}
+/* Price */
+.price-num{font-size:24px;font-weight:900;font-family:var(--mo)}
+.paid-tag{display:inline-flex;align-items:center;gap:5px;background:rgba(0,255,136,.1);border:1px solid rgba(0,255,136,.2);border-radius:20px;padding:4px 12px;color:var(--gn);font-size:12px;font-weight:600;margin-top:8px}
+.unpaid-note{font-size:12px;color:var(--tx3);margin-top:6px}
+/* Late warning */
+.late{background:rgba(255,68,102,.08);border:1px solid rgba(255,68,102,.25);border-radius:8px;padding:9px 12px;color:var(--rd);font-size:12px;margin-top:8px;line-height:1.6}
+/* Footer */
+.footer{text-align:center;color:var(--tx3);font-size:11px;margin-top:20px;line-height:1.8}
+.footer .brand{font-size:14px;font-weight:700;color:var(--cy);margin-bottom:4px}
+/* States */
+.loading{text-align:center;padding:50px 20px;color:var(--tx3)}
+.spin{display:inline-block;font-size:36px;animation:spin 1s linear infinite;margin-bottom:14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-card{background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.2);border-radius:var(--r3);padding:28px;text-align:center}
+.error-icon{font-size:44px;margin-bottom:14px}
+.error-title{font-size:16px;font-weight:700;color:var(--rd);margin-bottom:8px}
+.error-msg{font-size:13px;color:var(--tx2);line-height:1.7}
+/* Config form (shown when no config) */
+.cfg-card{background:var(--b2);border:1px solid var(--br2);border-radius:var(--r3);padding:20px;margin-bottom:12px}
+.cfg-card h3{font-size:14px;font-weight:700;margin-bottom:4px;color:var(--cy)}
+.cfg-card p{font-size:12px;color:var(--tx3);margin-bottom:14px;line-height:1.7}
+.cfg-card textarea{width:100%;background:var(--b3);border:1px solid var(--br2);border-radius:var(--r);padding:10px;color:var(--tx);font-family:var(--mo);font-size:11px;outline:none;resize:vertical;min-height:130px;-webkit-appearance:none}
+.cfg-card textarea:focus{border-color:var(--cy)}
+.cfg-btn{width:100%;margin-top:10px;padding:11px;background:var(--cy);color:var(--b0);border:none;border-radius:var(--r);font-family:var(--fn);font-size:14px;font-weight:700;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <div class="name"><span class="g">AL</span><span class="s">MALIK</span></div>
+    <div class="sub">تتبع حالة الصيانة</div>
+  </div>
+  <div id="content">
+    <div class="loading">
+      <div class="spin">⏳</div>
+      <div>جاري تحميل بيانات الصيانة...</div>
+    </div>
+  </div>
+  <div class="footer">
+    <div class="brand">ALMALIK Workshop 🔧</div>
+    للاستفسار تواصل مع الورشة مباشرة
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getDatabase, ref, get, onValue } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+/* ─────────────────────────────────
+   Helpers
+───────────────────────────────── */
+const IQD = n => new Intl.NumberFormat('ar-IQ').format(Math.round(n||0)) + ' د.ع';
+const fmtTs = ts => {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}  ${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`;
+};
+const STATUS_LABEL = {
+  new:      '🆕 مستلمة — تنتظر الفحص',
+  inprog:   '🔧 جاري العمل عليها الآن',
+  waiting:  '⏳ تنتظر قطعة غيار',
+  done:     '✅ مكتملة — جاهزة للاستلام!',
+  cancelled:'❌ ملغاة'
+};
+const STATUS_COLOR = {
+  new:'var(--cy)', inprog:'var(--yw)', waiting:'var(--pu)',
+  done:'var(--gn)', cancelled:'var(--rd)'
+};
+
+/* ─────────────────────────────────
+   Get Firebase config from localStorage
+   (same origin as index.html on GitHub Pages)
+───────────────────────────────── */
+function getCfg() {
+  try {
+    // Keys used by the main app
+    for (const key of ['lp_fb', 'am4_fb', 'firebase_config']) {
+      const s = localStorage.getItem(key);
+      if (s) {
+        const c = JSON.parse(s);
+        if (c && c.apiKey && c.databaseURL && !c.apiKey.includes('PASTE')) return c;
+      }
+    }
+  } catch(e) {}
+  return null;
+}
+
+/* ─────────────────────────────────
+   Render repair data
+───────────────────────────────── */
+function renderRepair(r) {
+  const prog  = r.progress || 0;
+  const col   = prog === 100 ? 'var(--gn)' : prog > 60 ? 'var(--cy)' : 'var(--yw)';
+  const isLate = r.eta && Date.now() > new Date(r.eta).getTime()
+              && r.status !== 'done' && r.status !== 'cancelled';
+
+  document.getElementById('content').innerHTML = `
+    <div class="card">
+      <span class="lbl">رقم الصيانة</span>
+      <div class="repair-id">#${r.id.slice(-6).toUpperCase()}</div>
+    </div>
+
+    <div class="card">
+      <span class="lbl">الجهاز</span>
+      <div class="device-name">${(r.deviceBrand||'')+' '+(r.deviceModel||'')}</div>
+    </div>
+
+    <div class="card">
+      <div class="status-row">
+        <div class="s-icon">${{new:'🆕',inprog:'🔧',waiting:'⏳',done:'✅',cancelled:'❌'}[r.status]||'📋'}</div>
+        <div class="s-text" style="color:${STATUS_COLOR[r.status]||'var(--tx)'}">
+          ${STATUS_LABEL[r.status]||r.status}
+        </div>
+      </div>
+      <div class="pbar">
+        <div class="pbar-fill" style="width:${prog}%;background:${col}"></div>
+      </div>
+      <div class="pct-label">${prog}% مكتمل</div>
+      ${r.progressNotes ? `<div class="notes-box">${r.progressNotes}</div>` : ''}
+    </div>
+
+    ${(r.faultConfirmed || r.eta) ? `
+    <div class="card">
+      <div class="info-grid">
+        ${r.faultConfirmed ? `<div class="info-item"><span class="lbl">العطل المؤكد</span><div class="val">${r.faultConfirmed}</div></div>` : ''}
+        ${r.eta ? `<div class="info-item"><span class="lbl">الموعد المتوقع</span><div class="val" style="${isLate?'color:var(--rd)':''}">${r.eta}${isLate?' ⚠️':''}</div></div>` : ''}
+      </div>
+      ${isLate ? `<div class="late">⏰ تجاوز الموعد المحدد — ستتم مراجعتك قريباً</div>` : ''}
+    </div>` : ''}
+
+    ${r.agreedPrice ? `
+    <div class="card">
+      <span class="lbl">السعر المتفق عليه</span>
+      <div class="price-num" style="color:var(--gn)">${IQD(r.agreedPrice)}</div>
+      ${r.paid
+        ? `<div class="paid-tag">✅ تم الدفع</div>`
+        : `<div class="unpaid-note">يُدفع عند استلام الجهاز</div>`}
+    </div>` : ''}
+
+    <div class="card" style="text-align:center;color:var(--tx3)">
+      <div style="font-size:11px">آخر تحديث: ${fmtTs(r.updatedAt||r.createdAt)}</div>
+    </div>`;
+}
+
+/* ─────────────────────────────────
+   Show error
+───────────────────────────────── */
+function showError(title, msg) {
+  document.getElementById('content').innerHTML = `
+    <div class="error-card">
+      <div class="error-icon">❓</div>
+      <div class="error-title">${title}</div>
+      <div class="error-msg">${msg}</div>
+    </div>`;
+}
+
+/* ─────────────────────────────────
+   Show config form (when no Firebase config)
+───────────────────────────────── */
+function showCfgForm(repairId) {
+  document.getElementById('content').innerHTML = `
+    <div class="error-card" style="margin-bottom:12px">
+      <div class="error-icon">⚙️</div>
+      <div class="error-title" style="color:var(--yw)">البرنامج يحتاج إعداد</div>
+      <div class="error-msg">لعرض بيانات الصيانة، أدخل Firebase Config أدناه<br>(مرة واحدة فقط على هذا الجهاز)</div>
+    </div>
+    <div class="cfg-card">
+      <h3>⚙️ Firebase Config</h3>
+      <p>انسخ الـ config من لوحة Firebase وأدخله هنا</p>
+      <textarea id="cfgInput" placeholder='{"apiKey":"...","databaseURL":"https://...-default-rtdb.firebaseio.com",...}'></textarea>
+      <button class="cfg-btn" onclick="tryCfg('${repairId}')">اتصال وعرض البيانات</button>
+      <div id="cfgErr" style="color:var(--rd);font-size:12px;margin-top:8px;display:none"></div>
+    </div>`;
+}
+
+/* ─────────────────────────────────
+   Try saved config from form
+───────────────────────────────── */
+window.tryCfg = async (repairId) => {
+  try {
+    const raw = document.getElementById('cfgInput').value.trim();
+    const c = JSON.parse(raw);
+    if (!c.apiKey || !c.databaseURL) throw new Error('apiKey أو databaseURL مفقود');
+    localStorage.setItem('lp_fb', JSON.stringify(c));
+    document.getElementById('content').innerHTML = '<div class="loading"><div class="spin">⏳</div><div>جاري الاتصال...</div></div>';
+    await loadFromFirebase(repairId, c);
+  } catch(e) {
+    const err = document.getElementById('cfgErr');
+    if (err) { err.style.display = 'block'; err.textContent = '❌ ' + e.message; }
+  }
+};
+
+/* ─────────────────────────────────
+   Load from Firebase
+───────────────────────────────── */
+async function loadFromFirebase(repairId, cfg) {
+  try {
+    const ex  = getApps();
+    const app = ex.length ? ex[0] : initializeApp(cfg);
+    const db  = getDatabase(app);
+
+    // Try public_repairs first (fastest, open read)
+    let snap = await get(ref(db, `public_repairs/${repairId}`));
+    let data = snap.val();
+
+    // Fallback: full repairs path
+    if (!data) {
+      snap = await get(ref(db, `almalik/repairs/${repairId}`));
+      data = snap.val();
+    }
+
+    if (!data) {
+      showError('رقم الصيانة غير موجود',
+        'تأكد من الرابط أو تواصل مع الورشة<br><small style="color:var(--tx3)">ID: '+repairId+'</small>');
+      return;
+    }
+
+    renderRepair(data);
+
+    // Live updates via public_repairs
+    onValue(ref(db, `public_repairs/${repairId}`), snap2 => {
+      const v = snap2.val();
+      if (v) renderRepair(v);
+    }, { onlyOnce: false });
+
+  } catch(e) {
+    console.error('Firebase error:', e);
+    showError('خطأ في الاتصال', e.message.slice(0, 100));
+  }
+}
+
+/* ─────────────────────────────────
+   MAIN
+───────────────────────────────── */
+async function main() {
+  const params   = new URLSearchParams(location.search);
+  const repairId = params.get('id');
+
+  if (!repairId) {
+    showError('رابط غير صحيح', 'لم يتم تحديد رقم الصيانة في الرابط');
+    return;
+  }
+
+  const cfg = getCfg();
+
+  if (!cfg) {
+    // No config found — show config form
+    showCfgForm(repairId);
+    return;
+  }
+
+  await loadFromFirebase(repairId, cfg);
+}
+
+main();
+</script>
+</body>
+</html>
