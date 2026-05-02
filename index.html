@@ -3,9 +3,6 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="cache-control" content="no-cache, no-store, must-revalidate">
-<meta http-equiv="pragma" content="no-cache">
-<meta http-equiv="expires" content="0">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -14,7 +11,6 @@
 <title>ALMALIK v5 — نظام إدارة الورشة</title>
 <link rel="manifest" href="#" id="mfLink">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root{
   --b0:#06090f;--b1:#0a0e17;--b2:#0f1520;--b3:#141c28;--b4:#1a2333;--b5:#1f2a3c;
@@ -1550,16 +1546,22 @@ async function delRepair(id){if(!can('delete')){toast('غير مصرح','e');ret
 // ════════════════════════════════════════════════
 function showQR(id){
   const r=DB.repairs[id];if(!r)return;
-  // Build tracking URL - works both on localhost and GitHub Pages
   const base=location.origin+location.pathname.replace(/\/$/,'');
   const url=base.replace(/\/[^/]*$/, '/')+`track.html?id=${id}`;
   document.getElementById('qrURL').textContent=url;
-  // Clear old QR first
   const qrEl=document.getElementById('qrCanvas');
   if(qrEl)qrEl.innerHTML='';
   document.getElementById('qrModal').style.display='flex';
-  // Draw QR after modal is visible (needs dimensions)
-  setTimeout(()=>drawQR(url),100);
+  // Load QR library lazily then draw
+  if(window.QRCode){
+    setTimeout(()=>drawQR(url),100);
+  } else {
+    const s=document.createElement('script');
+    s.src='https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
+    s.onload=()=>setTimeout(()=>drawQR(url),100);
+    s.onerror=()=>setTimeout(()=>drawQR(url),100);
+    document.head.appendChild(s);
+  }
 }
 function drawQR(text){
   const el=document.getElementById('qrCanvas');
