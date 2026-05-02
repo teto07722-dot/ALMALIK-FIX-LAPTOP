@@ -1781,7 +1781,7 @@ import { getDatabase, ref, set, onValue, off, get } from 'https://www.gstatic.co
 window._FM = { initializeApp, getApps, getDatabase, ref, set, onValue, off, get };
 console.log('✅ Firebase modules loaded successfully');
 
-// إشعر الكود الرئيسي بأن Firebase جاهز
+// إشعر الكود الرئيسي . بأن Firebase جاهز
 if (typeof isFBOK === 'function' && typeof getFB === 'function' && typeof initFB === 'function') {
   if (isFBOK(getFB())) initFB();
 }
